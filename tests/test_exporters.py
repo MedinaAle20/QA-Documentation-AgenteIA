@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 from markdown_exporter import export_to_markdown
 from mock_test import MOCK_DATA
 from qa_agent import export_to_excel
-from report_storage import slugify_project_name
+from report_storage import _app_root, slugify_project_name
 
 
 def test_export_to_excel_creates_expected_stlc_sheets(tmp_path):
@@ -44,3 +44,11 @@ def test_slugify_project_name_is_safe_for_report_filenames():
     assert slugify_project_name("OrangeHRM Login QA") == "orangehrm_login_qa"
     assert slugify_project_name("  ") == "proyecto"
     assert slugify_project_name("Modulo con acentos y espacios") == "modulo_con_acentos_y_espacios"
+
+
+def test_app_root_uses_executable_folder_when_frozen(monkeypatch, tmp_path):
+    fake_exe = tmp_path / "QA Documentation IA Agent.exe"
+    monkeypatch.setattr("sys.frozen", True, raising=False)
+    monkeypatch.setattr("sys.executable", str(fake_exe))
+
+    assert _app_root() == tmp_path

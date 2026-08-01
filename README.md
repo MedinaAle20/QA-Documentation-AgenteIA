@@ -123,7 +123,7 @@ Tambien se genera una version Markdown del documento para subir a GitHub o usar 
 Los reportes se guardan automaticamente en:
 
 ```text
-C:\Users\<tu-usuario>\Documents\QA Documentation IA Agent\reportes
+<carpeta donde esta la app>\reportes
 ```
 
 Ejemplo de nombre:
@@ -249,7 +249,7 @@ El ejecutable queda en:
 dist\QA Documentation IA Agent\QA Documentation IA Agent.exe
 ```
 
-Se recomienda distribuir la carpeta completa `dist\QA Documentation IA Agent`, no solo el `.exe`, porque Streamlit y pywebview necesitan archivos internos.
+Se recomienda distribuir la carpeta completa `dist\QA Documentation IA Agent`, no solo el `.exe`, porque Streamlit y pywebview necesitan archivos internos. Los reportes quedan en la subcarpeta `reportes` junto al ejecutable.
 
 ---
 

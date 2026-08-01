@@ -6,6 +6,7 @@ Centraliza donde se guardan los Excel generados por la app local.
 """
 
 import re
+import sys
 import unicodedata
 from datetime import datetime
 from pathlib import Path
@@ -14,7 +15,14 @@ from markdown_exporter import export_to_markdown
 from qa_agent import export_to_excel
 
 
-REPORTS_DIR = Path.home() / "Documents" / "QA Documentation IA Agent" / "reportes"
+def _app_root() -> Path:
+    """Devuelve la carpeta visible de la app, tambien cuando corre empaquetada."""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+REPORTS_DIR = _app_root() / "reportes"
 
 
 def slugify_project_name(project_name: str) -> str:

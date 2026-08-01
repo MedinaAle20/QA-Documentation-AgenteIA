@@ -46,6 +46,7 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name='QA Documentation IA Agent',
+    icon='assets/app_icon.ico',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

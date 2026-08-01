@@ -12,6 +12,7 @@ from datetime import datetime
 
 try:
     from openpyxl import Workbook
+    from openpyxl.worksheet.datavalidation import DataValidation
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
     from openpyxl.utils import get_column_letter
 except ImportError:
@@ -51,15 +52,33 @@ REQUIRED_CASE_KEYS = [
 ]
 
 HEADER_FILL = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
+TITLE_FILL = PatternFill(start_color="173D60", end_color="173D60", fill_type="solid")
 SUBTITLE_FILL = PatternFill(start_color="D9EAF7", end_color="D9EAF7", fill_type="solid")
+ALT_ROW_FILL = PatternFill(start_color="F8FBFD", end_color="F8FBFD", fill_type="solid")
+INPUT_FILL = PatternFill(start_color="FFF8E6", end_color="FFF8E6", fill_type="solid")
+PENDING_FILL = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+PASSED_FILL = PatternFill(start_color="E2F0D9", end_color="E2F0D9", fill_type="solid")
+FAILED_FILL = PatternFill(start_color="FCE4E4", end_color="FCE4E4", fill_type="solid")
+INFO_FILL = PatternFill(start_color="EAF2F8", end_color="EAF2F8", fill_type="solid")
 HEADER_FONT = Font(color="FFFFFF", bold=True, size=11)
-TITLE_FONT = Font(bold=True, size=14, color="1F4E79")
+TITLE_FONT = Font(bold=True, size=14, color="FFFFFF")
 SECTION_FONT = Font(bold=True, size=12, color="1F4E79")
 BODY_FONT = Font(size=11)
 MUTED_FONT = Font(size=9, color="666666")
 WRAP = Alignment(wrap_text=True, vertical="top")
+CENTER_WRAP = Alignment(wrap_text=True, vertical="top", horizontal="center")
 THIN = Side(style="thin", color="D9D9D9")
 BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+
+SHEET_TAB_COLORS = {
+    "01_RTM": "1F4E79",
+    "02_Test_Plan": "5B9BD5",
+    "03_Test_Cases": "70AD47",
+    "04_Environment": "FFC000",
+    "05_Execution": "A5A5A5",
+    "06_Defect_Log": "C00000",
+    "07_Test_Summary": "7030A0",
+}
 
 
 def generate_test_cases(requirement_text: str, provider_name: str = None, model: str = None) -> dict:
@@ -209,7 +228,14 @@ def _empty_summary() -> dict:
 
 def _setup_sheet(ws, title: str, data: dict) -> int:
     ws.sheet_view.showGridLines = False
-    ws.cell(row=1, column=1, value=title).font = TITLE_FONT
+    ws.freeze_panes = "A6"
+    ws.sheet_properties.tabColor = SHEET_TAB_COLORS.get(ws.title, "1F4E79")
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=4)
+    title_cell = ws.cell(row=1, column=1, value=title)
+    title_cell.font = TITLE_FONT
+    title_cell.fill = TITLE_FILL
+    title_cell.alignment = Alignment(vertical="center")
+    ws.row_dimensions[1].height = 26
     ws.cell(row=2, column=1, value=f"Feature: {data.get('feature', 'N/A')}").font = BODY_FONT
     ws.cell(row=3, column=1, value=data.get("resumen", "")).font = MUTED_FONT
     ws.cell(row=4, column=1, value=f"Generado: {datetime.now().strftime('%Y-%m-%d %H:%M')}").font = MUTED_FONT
@@ -219,6 +245,7 @@ def _setup_sheet(ws, title: str, data: dict) -> int:
 def _write_section(ws, row: int, title: str, value) -> int:
     ws.cell(row=row, column=1, value=title).font = SECTION_FONT
     ws.cell(row=row, column=1).fill = SUBTITLE_FILL
+    ws.cell(row=row, column=1).border = BORDER
     row += 1
     if isinstance(value, list):
         formatted_items = []
@@ -235,17 +262,21 @@ def _write_section(ws, row: int, title: str, value) -> int:
     cell = ws.cell(row=row, column=1, value=text)
     cell.font = BODY_FONT
     cell.alignment = WRAP
+    cell.border = BORDER
+    ws.row_dimensions[row].height = max(24, min(96, 18 * (str(text).count("\n") + 1)))
     row += 2
     return row
 
 
 def _write_table(ws, row: int, headers: list[str], rows: list[list], widths: list[int]) -> int:
+    start_row = row
     for col, header in enumerate(headers, start=1):
         cell = ws.cell(row=row, column=col, value=header)
         cell.fill = HEADER_FILL
         cell.font = HEADER_FONT
-        cell.alignment = WRAP
+        cell.alignment = CENTER_WRAP
         cell.border = BORDER
+    ws.row_dimensions[row].height = 30
 
     for index, width in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(index)].width = width
@@ -260,10 +291,54 @@ def _write_table(ws, row: int, headers: list[str], rows: list[list], widths: lis
             cell.font = BODY_FONT
             cell.alignment = WRAP
             cell.border = BORDER
+            if row % 2 == 0:
+                cell.fill = ALT_ROW_FILL
+            _apply_value_style(cell, headers[col - 1])
+        ws.row_dimensions[row].height = _estimate_row_height(row_values)
         row += 1
 
-    ws.freeze_panes = "A7"
+    end_col = get_column_letter(len(headers))
+    ws.auto_filter.ref = f"A{start_row}:{end_col}{row - 1}"
+    ws.freeze_panes = f"A{start_row + 1}"
     return row + 1
+
+
+def _estimate_row_height(row_values: list) -> int:
+    max_lines = 1
+    for value in row_values:
+        line_count = str(value or "").count("\n") + 1
+        max_lines = max(max_lines, line_count)
+    return max(24, min(120, 18 * max_lines))
+
+
+def _apply_value_style(cell, header: str) -> None:
+    value = str(cell.value or "").strip().lower()
+    header_lower = header.lower()
+
+    if header_lower in {"resultado obtenido", "notas", "evidencia", "comentarios"}:
+        cell.fill = INPUT_FILL
+
+    if header_lower in {"estado", "estado qa", "prioridad", "severidad"}:
+        cell.alignment = CENTER_WRAP
+
+    if value in {"pendiente", "en revision", "duda abierta"}:
+        cell.fill = PENDING_FILL
+    elif value in {"revisado", "pasado", "resuelto"}:
+        cell.fill = PASSED_FILL
+    elif value in {"fallado", "critica", "critico", "alta"}:
+        cell.fill = FAILED_FILL
+    elif value in {"media", "baja", "bloqueado"}:
+        cell.fill = INFO_FILL
+
+
+def _add_dropdown(ws, cell_range: str, options: list[str]) -> None:
+    validation = DataValidation(
+        type="list",
+        formula1=f'"{",".join(options)}"',
+        allow_blank=True,
+    )
+    ws.add_data_validation(validation)
+    validation.add(cell_range)
 
 
 def _steps_text(steps: list[str]) -> str:
@@ -290,6 +365,7 @@ def _write_rtm_sheet(wb, data: dict):
         for item in analysis.get("rtm", [])
     ]
     _write_table(ws, row, headers, table_rows, [14, 60, 18, 30])
+    _add_dropdown(ws, f"C{row + 1}:C200", ["Revisado", "En revision", "Duda abierta"])
 
 
 def _write_test_plan_sheet(wb, data: dict):
@@ -339,6 +415,8 @@ def _write_test_cases_sheet(wb, data: dict):
             ]
         )
     _write_table(ws, row, headers, rows, [10, 18, 32, 14, 26, 14, 30, 28, 46, 34, 34, 14, 26])
+    _add_dropdown(ws, f"F{row + 1}:F300", ["Alta", "Media", "Baja"])
+    _add_dropdown(ws, f"L{row + 1}:L300", ["Pendiente", "Pasado", "Fallado", "Bloqueado", "No ejecutado"])
 
 
 def _write_environment_sheet(wb, data: dict):
@@ -356,6 +434,7 @@ def _write_environment_sheet(wb, data: dict):
         for item in data.get("checklist_entorno", [])
     ]
     _write_table(ws, row, headers, rows, [12, 70, 18, 16, 34])
+    _add_dropdown(ws, f"D{row + 1}:D150", ["Pendiente", "Listo", "Bloqueado", "No aplica"])
 
 
 def _write_execution_sheet(wb, data: dict):
@@ -401,6 +480,9 @@ def _write_defect_log_sheet(wb, data: dict):
         for defect in defects
     ]
     _write_table(ws, row, headers, rows, [12, 34, 14, 14, 16, 18, 44, 34, 34, 24, 24])
+    _add_dropdown(ws, f"C{row + 1}:C200", ["Critica", "Alta", "Media", "Baja"])
+    _add_dropdown(ws, f"D{row + 1}:D200", ["Alta", "Media", "Baja"])
+    _add_dropdown(ws, f"E{row + 1}:E200", ["Abierto", "En progreso", "Resuelto", "Cerrado", "Bloqueado"])
 
 
 def _write_summary_sheet(wb, data: dict):

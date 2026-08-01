@@ -92,6 +92,16 @@ Cada reporte se exporta con 7 hojas:
 
 Campos como `Resultado obtenido`, `Estado`, metricas de ejecucion, bugs y decision final quedan pendientes para completar luego de la ejecucion real.
 
+El archivo incluye formato profesional basico:
+
+- Encabezados resaltados.
+- Filtros en tablas.
+- Columnas ajustadas por tipo de informacion.
+- Colores por estado y prioridad.
+- Campos editables resaltados para completar durante ejecucion.
+- Listas desplegables en estado, prioridad y severidad.
+- Pestañas diferenciadas por color.
+
 ---
 
 ## Flujo de Uso
@@ -115,6 +125,8 @@ Ejemplo de nombre:
 ```text
 documentacion_qa_orangehrm_login_20260731_213000.xlsx
 ```
+
+El historial se mantiene como carpeta local de reportes, no como modulo interno de la app. Esto evita agregar base de datos o consumo innecesario de recursos para un uso local.
 
 ---
 
@@ -232,9 +244,9 @@ Genera `casos_mock.xlsx` para validar el formato del Excel sin consumir Gemini.
 - [x] App local simple con Streamlit.
 - [x] Configuracion persistente de API key.
 - [x] Guardado automatico de reportes.
-- [ ] Mejorar diseno visual del Excel.
-- [ ] Agregar validacion estricta del JSON devuelto por Gemini.
-- [ ] Agregar historial simple de reportes generados.
+- [x] Mejorar diseno visual del Excel.
+- [x] Agregar validacion estricta del JSON devuelto por Gemini.
+- [x] Historial simple mediante carpeta local de reportes.
 - [ ] Empaquetar como `.exe` con PyInstaller.
 - [ ] Agregar capturas al README.
 

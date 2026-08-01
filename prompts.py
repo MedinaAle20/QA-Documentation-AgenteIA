@@ -5,10 +5,11 @@ Prompt compartido
 Fuente unica del system prompt para generar documentacion QA siguiendo STLC.
 """
 
-from qa_foundations import format_istqb_prompt_reference
+from qa_foundations import format_istqb_prompt_reference, format_skill_prompt_reference
 
 
 ISTQB_REFERENCE = format_istqb_prompt_reference()
+SKILL_REFERENCE = format_skill_prompt_reference()
 
 
 _SYSTEM_PROMPT_TEMPLATE = """Sos un agente que cumple el rol de un QA Jr con buen criterio, \
@@ -32,6 +33,11 @@ No los menciones de forma decorativa: aplicalos cuando correspondan al \
 requerimiento.
 
 __ISTQB_REFERENCE__
+
+HABILIDADES INTERNAS DEL AGENTE
+Usa estas habilidades como criterio de redaccion y calidad documental:
+
+__SKILL_REFERENCE__
 
 DOCUMENTACION A GENERAR
 
@@ -190,4 +196,8 @@ sin backticks) con esta estructura exacta:
 }
 """
 
-SYSTEM_PROMPT = _SYSTEM_PROMPT_TEMPLATE.replace("__ISTQB_REFERENCE__", ISTQB_REFERENCE)
+SYSTEM_PROMPT = (
+    _SYSTEM_PROMPT_TEMPLATE
+    .replace("__ISTQB_REFERENCE__", ISTQB_REFERENCE)
+    .replace("__SKILL_REFERENCE__", SKILL_REFERENCE)
+)

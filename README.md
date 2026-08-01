@@ -233,6 +233,26 @@ Genera `casos_mock.xlsx` para validar el formato del Excel sin consumir Gemini.
 
 ---
 
+## Empaquetado
+
+Para generar la version de escritorio distribuible:
+
+```bash
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+pyinstaller "QA Documentation IA Agent.spec"
+```
+
+El ejecutable queda en:
+
+```text
+dist\QA Documentation IA Agent\QA Documentation IA Agent.exe
+```
+
+Se recomienda distribuir la carpeta completa `dist\QA Documentation IA Agent`, no solo el `.exe`, porque Streamlit y pywebview necesitan archivos internos.
+
+---
+
 ## Validaciones Realizadas
 
 - Compilacion Python con `compileall`.
@@ -240,6 +260,7 @@ Genera `casos_mock.xlsx` para validar el formato del Excel sin consumir Gemini.
 - Verificacion de Excel con 8 hojas STLC.
 - Generacion real con Gemini usando `gemini-3.5-flash-lite`.
 - Guardado local en carpeta de reportes.
+- Empaquetado local con PyInstaller en modo carpeta (`onedir`).
 
 ---
 
@@ -256,7 +277,7 @@ Genera `casos_mock.xlsx` para validar el formato del Excel sin consumir Gemini.
 - [x] Mejorar diseno visual del Excel.
 - [x] Agregar validacion estricta del JSON devuelto por Gemini.
 - [x] Historial simple mediante carpeta local de reportes.
-- [ ] Empaquetar como `.exe` con PyInstaller.
+- [x] Empaquetar como `.exe` con PyInstaller.
 - [ ] Agregar capturas al README.
 
 ---

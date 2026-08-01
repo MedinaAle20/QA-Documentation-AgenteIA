@@ -1,41 +1,46 @@
 #!/usr/bin/env python3
 """
-QA Agent — App de escritorio
--------------------------------
-Envuelve streamlit_app.py en una ventana nativa (sin pestaña de navegador),
-usando pywebview. Levanta el servidor de Streamlit en un proceso en segundo
-plano, en un puerto libre, y abre una ventana apuntando a esa URL. Al cerrar
-la ventana, el servidor se apaga solo.
-
-Uso:
-    python desktop_app.py
-
-Para armar un acceso directo de doble clic en Windows, ver el .bat de
-ejemplo en README.md (sección "App de escritorio").
+QA Documentation IA Agent - App de escritorio
+---------------------------------------------
+Abre la app Streamlit dentro de una ventana nativa usando pywebview.
+Para facilitar el empaquetado, el servidor Streamlit corre en un segundo
+proceso interno del mismo ejecutable.
 """
 
+from pathlib import Path
 import socket
 import subprocess
 import sys
 import time
+import tempfile
+import traceback
 import urllib.request
-
-try:
-    import webview
-except ImportError:
-    print("Falta instalar pywebview. Corré: pip install -r requirements.txt")
-    sys.exit(1)
 
 
 APP_TITLE = "QA Documentation IA Agent"
 STARTUP_TIMEOUT = 20.0
 
 
+def _log_path() -> Path:
+    return Path(tempfile.gettempdir()) / "qa_documentation_ia_agent.log"
+
+
+def _write_log(message: str) -> None:
+    with _log_path().open("a", encoding="utf-8") as log_file:
+        log_file.write(message.rstrip() + "\n")
+
+
+def _app_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(getattr(sys, "_MEIPASS"))
+    return Path(__file__).resolve().parent
+
+
 def _free_port() -> int:
     """Busca un puerto TCP libre en localhost para no chocar con otras apps."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+        server_socket.bind(("127.0.0.1", 0))
+        return server_socket.getsockname()[1]
 
 
 def _wait_for_server(url: str, timeout: float) -> bool:
@@ -50,28 +55,66 @@ def _wait_for_server(url: str, timeout: float) -> bool:
     return False
 
 
-def main():
+def _run_streamlit_server(port: int) -> None:
+    from streamlit.web import bootstrap
+
+    script_path = _app_dir() / "streamlit_app.py"
+    if not script_path.exists():
+        raise FileNotFoundError(f"No se encontro streamlit_app.py en {script_path}")
+
+    flag_options = {
+        "global.developmentMode": False,
+        "server.port": port,
+        "server.headless": True,
+        "server.address": "127.0.0.1",
+        "browser.gatherUsageStats": False,
+    }
+    bootstrap.load_config_options(flag_options)
+    bootstrap.run(str(script_path), False, [], flag_options)
+
+
+def _server_command(port: int) -> list[str]:
+    if getattr(sys, "frozen", False):
+        return [sys.executable, "--streamlit-server", str(port)]
+    return [sys.executable, str(Path(__file__).resolve()), "--streamlit-server", str(port)]
+
+
+def _start_streamlit(port: int) -> subprocess.Popen:
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    log_file = _log_path().open("a", encoding="utf-8")
+    return subprocess.Popen(
+        _server_command(port),
+        stdout=log_file,
+        stderr=log_file,
+        creationflags=creationflags,
+    )
+
+
+def main() -> None:
+    if len(sys.argv) >= 3 and sys.argv[1] == "--streamlit-server":
+        try:
+            _run_streamlit_server(int(sys.argv[2]))
+        except Exception:
+            _write_log(traceback.format_exc())
+            raise
+        return
+
+    try:
+        import webview
+    except ImportError:
+        print("Falta instalar pywebview. Corre: pip install -r requirements.txt")
+        sys.exit(1)
+
     port = _free_port()
     url = f"http://127.0.0.1:{port}"
 
-    proc = subprocess.Popen(
-        [
-            sys.executable, "-m", "streamlit", "run", "streamlit_app.py",
-            "--server.port", str(port),
-            "--server.headless", "true",
-            "--browser.gatherUsageStats", "false",
-            "--server.address", "127.0.0.1",
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
+    print("Iniciando QA Documentation IA Agent...")
+    server_process = _start_streamlit(port)
     try:
-        print("Iniciando QA Documentation IA Agent...")
         if not _wait_for_server(url, STARTUP_TIMEOUT):
             print(
-                f"Error: el servidor no respondió después de {STARTUP_TIMEOUT:.0f}s. "
-                "Revisá que 'pip install -r requirements.txt' se haya corrido bien."
+                f"Error: el servidor no respondio despues de {STARTUP_TIMEOUT:.0f}s. "
+                "Revisa que 'pip install -r requirements.txt' se haya corrido bien."
             )
             return
 
@@ -84,12 +127,11 @@ def main():
         )
         webview.start()
     finally:
-        # Al cerrar la ventana (o si algo falla), apagamos el servidor.
-        proc.terminate()
+        server_process.terminate()
         try:
-            proc.wait(timeout=5)
+            server_process.wait(timeout=5)
         except subprocess.TimeoutExpired:
-            proc.kill()
+            server_process.kill()
 
 
 if __name__ == "__main__":

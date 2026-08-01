@@ -4,3 +4,5 @@ documentacion_qa_*.md
 __pycache__/
 *.pyc
 .streamlit/secrets.toml
+build/
+dist/

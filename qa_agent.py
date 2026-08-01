@@ -78,6 +78,7 @@ SHEET_TAB_COLORS = {
     "05_Execution": "A5A5A5",
     "06_Defect_Log": "C00000",
     "07_Test_Summary": "7030A0",
+    "08_Jira_Ready": "0052CC",
 }
 
 
@@ -500,6 +501,57 @@ def _write_summary_sheet(wb, data: dict):
     ws.column_dimensions["A"].width = 110
 
 
+def _requirement_ids_for_case(data: dict, case_id: str) -> str:
+    analysis = data.get("analisis_requerimientos") or {}
+    req_ids = []
+    for item in analysis.get("rtm", []):
+        if case_id in (item.get("casos_asignados") or []):
+            req_ids.append(item.get("req_id", ""))
+    return ", ".join(req_id for req_id in req_ids if req_id)
+
+
+def _write_jira_ready_sheet(wb, data: dict):
+    ws = wb.create_sheet("08_Jira_Ready")
+    row = _setup_sheet(ws, "08 - Jira Ready", data)
+    headers = [
+        "Issue Type", "Summary", "Description", "Priority", "Labels", "Component",
+        "Requirement IDs", "Test Case ID", "Test Steps", "Expected Result", "Status",
+    ]
+    rows = []
+    for case in data.get("casos_prueba", []):
+        case_id = case.get("id", "")
+        labels = [
+            "qa-documentation",
+            "manual-test",
+            str(case.get("tipo", "")).lower().replace(" ", "-"),
+            str(case.get("tecnica_diseno", "")).lower().replace(" ", "-"),
+        ]
+        rows.append(
+            [
+                "Test",
+                f"{case_id} - {case.get('titulo', '')}",
+                (
+                    f"Modulo: {case.get('modulo', '')}\n"
+                    f"Precondiciones: {case.get('precondiciones', '')}\n"
+                    f"Datos de prueba: {case.get('datos_prueba', '')}\n"
+                    f"Tecnica de diseno: {case.get('tecnica_diseno', '')}"
+                ),
+                case.get("prioridad", ""),
+                ", ".join(label for label in labels if label and label != "-"),
+                case.get("modulo", ""),
+                _requirement_ids_for_case(data, case_id),
+                case_id,
+                _steps_text(case.get("pasos", [])),
+                case.get("resultado_esperado", ""),
+                case.get("estado", "Pendiente"),
+            ]
+        )
+    _write_table(ws, row, headers, rows, [14, 44, 54, 14, 38, 20, 20, 16, 48, 42, 16])
+    _add_dropdown(ws, f"A{row + 1}:A300", ["Test", "Task", "Story"])
+    _add_dropdown(ws, f"D{row + 1}:D300", ["Alta", "Media", "Baja"])
+    _add_dropdown(ws, f"K{row + 1}:K300", ["Pendiente", "Pasado", "Fallado", "Bloqueado", "No ejecutado"])
+
+
 def export_to_excel(data: dict, output_path: str):
     """Exporta la documentacion STLC a un Excel listo para revisar y completar."""
     data = _normalize_document(data)
@@ -511,6 +563,7 @@ def export_to_excel(data: dict, output_path: str):
     _write_execution_sheet(wb, data)
     _write_defect_log_sheet(wb, data)
     _write_summary_sheet(wb, data)
+    _write_jira_ready_sheet(wb, data)
     wb.save(output_path)
 
 

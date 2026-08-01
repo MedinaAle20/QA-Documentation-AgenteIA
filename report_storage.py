@@ -10,6 +10,7 @@ import unicodedata
 from datetime import datetime
 from pathlib import Path
 
+from markdown_exporter import export_to_markdown
 from qa_agent import export_to_excel
 
 
@@ -38,3 +39,10 @@ def save_report(data: dict, project_name: str) -> Path:
     output_path = build_report_path(project_name)
     export_to_excel(data, output_path)
     return output_path
+
+
+def save_markdown_report(data: dict, excel_path: Path) -> Path:
+    """Guarda una version Markdown junto al Excel generado."""
+    markdown_path = excel_path.with_suffix(".md")
+    markdown_path.write_text(export_to_markdown(data), encoding="utf-8")
+    return markdown_path

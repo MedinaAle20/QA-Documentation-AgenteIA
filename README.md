@@ -37,6 +37,8 @@ El agente ayuda a:
 - Plantilla de defect log.
 - Plantilla de test summary / sign-off.
 - Exportacion a Excel.
+- Exportacion a Markdown.
+- Hoja Jira-ready para preparar importacion o copia manual.
 - Guardado automatico de reportes locales.
 
 ### No incluye
@@ -89,6 +91,7 @@ Cada reporte se exporta con 7 hojas:
 | `05_Execution` | Plantilla de reporte diario de ejecucion |
 | `06_Defect_Log` | Plantilla de registro de defectos |
 | `07_Test_Summary` | Plantilla de cierre y sign-off |
+| `08_Jira_Ready` | Casos preparados en formato amigable para Jira/Zephyr/Xray |
 
 Campos como `Resultado obtenido`, `Estado`, metricas de ejecucion, bugs y decision final quedan pendientes para completar luego de la ejecucion real.
 
@@ -102,6 +105,8 @@ El archivo incluye formato profesional basico:
 - Listas desplegables en estado, prioridad y severidad.
 - Pestañas diferenciadas por color.
 
+Tambien se genera una version Markdown del documento para subir a GitHub o usar como evidencia de portfolio.
+
 ---
 
 ## Flujo de Uso
@@ -113,6 +118,7 @@ El archivo incluye formato profesional basico:
 5. Generar la documentacion QA.
 6. Revisar el resultado en pantalla.
 7. Usar el Excel generado desde la carpeta local de reportes.
+8. Usar el Markdown generado si se quiere documentar el caso en GitHub.
 
 Los reportes se guardan automaticamente en:
 
@@ -124,6 +130,7 @@ Ejemplo de nombre:
 
 ```text
 documentacion_qa_orangehrm_login_20260731_213000.xlsx
+documentacion_qa_orangehrm_login_20260731_213000.md
 ```
 
 El historial se mantiene como carpeta local de reportes, no como modulo interno de la app. Esto evita agregar base de datos o consumo innecesario de recursos para un uso local.
@@ -240,6 +247,8 @@ Genera `casos_mock.xlsx` para validar el formato del Excel sin consumir Gemini.
 
 - [x] Generacion de documentacion QA con IA.
 - [x] Exportacion STLC a Excel.
+- [x] Exportacion STLC a Markdown.
+- [x] Hoja Jira-ready para importacion/copia manual.
 - [x] Fundamentos ISTQB en tecnicas de diseno.
 - [x] App local simple con Streamlit.
 - [x] Configuracion persistente de API key.

@@ -10,8 +10,9 @@ import streamlit as st
 
 from errors import QAAgentError
 from local_config import load_local_env, read_local_env, save_local_env
+from markdown_exporter import export_to_markdown
 from qa_agent import export_to_excel, generate_test_cases
-from report_storage import REPORTS_DIR, save_report, slugify_project_name
+from report_storage import REPORTS_DIR, save_markdown_report, save_report, slugify_project_name
 
 
 load_local_env()
@@ -153,6 +154,8 @@ def _render_results(data: dict) -> None:
             f'<div class="saved-path">Guardado en: {st.session_state["last_report_path"]}</div>',
             unsafe_allow_html=True,
         )
+    if st.session_state.get("last_markdown_path"):
+        st.caption(f"Markdown: {st.session_state['last_markdown_path']}")
 
     st.divider()
 
@@ -263,6 +266,15 @@ def _render_results(data: dict) -> None:
         use_container_width=True,
     )
 
+    markdown_text = export_to_markdown(data)
+    st.download_button(
+        "Descargar Markdown",
+        data=markdown_text,
+        file_name=filename.replace(".xlsx", ".md"),
+        mime="text/markdown",
+        use_container_width=True,
+    )
+
 
 saved_env = read_local_env()
 saved_gemini_key = saved_env.get("GEMINI_API_KEY") or ""
@@ -341,8 +353,10 @@ if generate_clicked:
                 )
                 data = generate_test_cases(requirement_text, provider_name="gemini", model=None)
                 report_path = save_report(data, project_name.strip())
+                markdown_path = save_markdown_report(data, report_path)
                 st.session_state["last_data"] = data
                 st.session_state["last_report_path"] = str(report_path)
+                st.session_state["last_markdown_path"] = str(markdown_path)
                 st.session_state["last_project_name"] = project_name.strip() or "proyecto"
                 st.success("Documento generado correctamente.")
             except QAAgentError as e:

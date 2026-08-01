@@ -12,7 +12,13 @@ from errors import QAAgentError
 from local_config import load_local_env, read_local_env, save_local_env
 from markdown_exporter import export_to_markdown
 from qa_agent import export_to_excel, generate_test_cases
-from report_storage import REPORTS_DIR, save_markdown_report, save_report, slugify_project_name
+from report_storage import (
+    REPORTS_DIR,
+    open_reports_folder,
+    save_markdown_report,
+    save_report,
+    slugify_project_name,
+)
 
 
 load_local_env()
@@ -177,7 +183,7 @@ def _render_results(data: dict) -> None:
             for item in analysis.get("rtm", [])
         ],
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
     )
 
     st.divider()
@@ -217,7 +223,7 @@ def _render_results(data: dict) -> None:
             for caso in casos
         ],
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
     )
 
     with st.expander("Ver detalle de los casos", expanded=False):
@@ -263,7 +269,7 @@ def _render_results(data: dict) -> None:
         data=buffer,
         file_name=filename,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True,
+        width="stretch",
     )
 
     markdown_text = export_to_markdown(data)
@@ -272,7 +278,7 @@ def _render_results(data: dict) -> None:
         data=markdown_text,
         file_name=filename.replace(".xlsx", ".md"),
         mime="text/markdown",
-        use_container_width=True,
+        width="stretch",
     )
 
 
@@ -301,7 +307,7 @@ with st.container(border=True):
 
     generate_clicked = st.button(
         "Generar documentacion QA",
-        use_container_width=True,
+        width="stretch",
     )
 
 with st.expander("Opciones", expanded=not bool(saved_gemini_key)):
@@ -320,7 +326,7 @@ with st.expander("Opciones", expanded=not bool(saved_gemini_key)):
             type="password",
             placeholder="Pega tu API key de Gemini",
         )
-        if st.button("Guardar API key", use_container_width=True):
+        if st.button("Guardar API key", width="stretch"):
             if not gemini_key_input.strip():
                 st.error("Pega una API key antes de guardar.")
             else:
@@ -370,5 +376,12 @@ if generate_clicked:
 if "last_data" in st.session_state:
     with st.container(border=True):
         _render_results(st.session_state["last_data"])
+
+if st.button("Abrir carpeta de reportes", width="stretch"):
+    try:
+        opened_path = open_reports_folder()
+        st.success(f"Carpeta abierta: {opened_path}")
+    except Exception as e:
+        st.error(f"No se pudo abrir la carpeta de reportes. Detalle tecnico: {e}")
 
 st.caption(f"Reportes locales: {REPORTS_DIR}")

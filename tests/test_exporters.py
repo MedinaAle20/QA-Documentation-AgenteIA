@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 from markdown_exporter import export_to_markdown
 from mock_test import MOCK_DATA
 from qa_agent import export_to_excel
-from report_storage import _app_root, slugify_project_name
+from report_storage import _app_root, ensure_reports_dir, slugify_project_name
 
 
 def test_export_to_excel_creates_expected_stlc_sheets(tmp_path):
@@ -52,3 +52,11 @@ def test_app_root_uses_executable_folder_when_frozen(monkeypatch, tmp_path):
     monkeypatch.setattr("sys.executable", str(fake_exe))
 
     assert _app_root() == tmp_path
+
+
+def test_ensure_reports_dir_creates_configured_directory(monkeypatch, tmp_path):
+    reports_dir = tmp_path / "reportes"
+    monkeypatch.setattr("report_storage.REPORTS_DIR", reports_dir)
+
+    assert ensure_reports_dir() == reports_dir
+    assert reports_dir.is_dir()

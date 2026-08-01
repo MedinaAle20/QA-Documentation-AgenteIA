@@ -5,7 +5,9 @@ Guardado de reportes
 Centraliza donde se guardan los Excel generados por la app local.
 """
 
+import os
 import re
+import subprocess
 import sys
 import unicodedata
 from datetime import datetime
@@ -23,6 +25,24 @@ def _app_root() -> Path:
 
 
 REPORTS_DIR = _app_root() / "reportes"
+
+
+def ensure_reports_dir() -> Path:
+    """Crea la carpeta de reportes si hace falta y devuelve su ruta."""
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    return REPORTS_DIR
+
+
+def open_reports_folder() -> Path:
+    """Abre la carpeta local de reportes con el explorador del sistema."""
+    reports_dir = ensure_reports_dir()
+    if os.name == "nt":
+        os.startfile(reports_dir)  # type: ignore[attr-defined]
+    elif sys.platform == "darwin":
+        subprocess.Popen(["open", str(reports_dir)])
+    else:
+        subprocess.Popen(["xdg-open", str(reports_dir)])
+    return reports_dir
 
 
 def slugify_project_name(project_name: str) -> str:
@@ -43,7 +63,7 @@ def build_report_path(project_name: str, generated_at: datetime | None = None) -
 
 def save_report(data: dict, project_name: str) -> Path:
     """Guarda el Excel en la carpeta local de reportes y devuelve la ruta."""
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    ensure_reports_dir()
     output_path = build_report_path(project_name)
     export_to_excel(data, output_path)
     return output_path

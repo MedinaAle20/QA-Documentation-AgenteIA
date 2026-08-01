@@ -147,6 +147,7 @@ La interfaz esta pensada para ser simple:
 - Seccion `Opciones` para configurar Gemini.
 - Vista del documento generado.
 - Boton para descargar Excel.
+- Boton para abrir la carpeta local de reportes.
 
 La API key queda guardada localmente en `.env` y no se muestra en la pantalla principal una vez configurada.
 

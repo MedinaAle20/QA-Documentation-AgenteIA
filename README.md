@@ -103,7 +103,7 @@ El archivo incluye formato profesional basico:
 - Colores por estado y prioridad.
 - Campos editables resaltados para completar durante ejecucion.
 - Listas desplegables en estado, prioridad y severidad.
-- Pestañas diferenciadas por color.
+- Pestanas diferenciadas por color.
 
 Tambien se genera una version Markdown del documento para subir a GitHub o usar como evidencia de portfolio.
 
@@ -256,11 +256,13 @@ Se recomienda distribuir la carpeta completa `dist\QA Documentation IA Agent`, n
 ## Validaciones Realizadas
 
 - Compilacion Python con `compileall`.
+- Tests unitarios con `pytest`.
 - Generacion mock sin API.
 - Verificacion de Excel con 8 hojas STLC.
 - Generacion real con Gemini usando `gemini-3.5-flash-lite`.
 - Guardado local en carpeta de reportes.
 - Empaquetado local con PyInstaller en modo carpeta (`onedir`).
+- CI en GitHub Actions para compilar, correr tests y validar el mock.
 
 ---
 

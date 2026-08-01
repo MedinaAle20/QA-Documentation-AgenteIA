@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-QA Documentation Agent
-----------------------
+QA Documentation IA Agent
+-------------------------
 Genera documentacion QA manual siguiendo STLC y la exporta a Excel.
 """
 
@@ -49,6 +49,78 @@ REQUIRED_CASE_KEYS = [
     "resultado_obtenido",
     "estado",
     "notas",
+]
+
+REQUIRED_ANALYSIS_KEYS = [
+    "objetivo",
+    "dudas_ambiguedades",
+    "riesgos_requerimiento",
+    "rtm",
+]
+
+REQUIRED_RTM_KEYS = [
+    "req_id",
+    "descripcion",
+    "estado_qa",
+    "casos_asignados",
+]
+
+REQUIRED_TEST_PLAN_KEYS = [
+    "alcance",
+    "fuera_de_alcance",
+    "tipos_prueba",
+    "tecnicas_diseno",
+    "estrategia",
+    "criterios_entrada",
+    "criterios_salida",
+    "supuestos",
+    "riesgos",
+]
+
+REQUIRED_TECHNIQUE_KEYS = [
+    "tecnica",
+    "aplicacion",
+]
+
+REQUIRED_ENVIRONMENT_KEYS = [
+    "id",
+    "item",
+    "responsable",
+    "estado",
+    "notas",
+]
+
+REQUIRED_EXECUTION_KEYS = [
+    "fecha",
+    "total_planificados",
+    "ejecutados",
+    "pasados",
+    "fallados",
+    "bloqueados",
+    "comentarios",
+    "bloqueos",
+]
+
+REQUIRED_DEFECT_KEYS = [
+    "bug_id",
+    "resumen",
+    "severidad",
+    "prioridad",
+    "estado",
+    "asignado_a",
+    "pasos_reproduccion",
+    "resultado_esperado",
+    "resultado_obtenido",
+    "evidencia",
+    "notas",
+]
+
+REQUIRED_SUMMARY_KEYS = [
+    "resumen_ejecucion",
+    "estado_bugs",
+    "riesgos_residuales",
+    "decision",
+    "comentarios_signoff",
 ]
 
 HEADER_FILL = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
@@ -106,31 +178,97 @@ def generate_test_cases(requirement_text: str, provider_name: str = None, model:
     return normalized
 
 
-def _validate_document_structure(data: dict) -> None:
-    """Valida que el JSON tenga la estructura minima esperada para STLC."""
-    missing = [key for key in REQUIRED_TOP_LEVEL_KEYS if key not in data]
+def _validate_required_keys(section_name: str, payload: dict, required_keys: list[str]) -> None:
+    missing = [key for key in required_keys if key not in payload]
     if missing:
         raise QAAgentError(
-            "La respuesta del modelo esta incompleta. Faltan secciones: "
+            f"La seccion '{section_name}' esta incompleta. Faltan campos: "
             + ", ".join(missing)
         )
 
-    if not isinstance(data.get("casos_prueba"), list) or not data["casos_prueba"]:
-        raise QAAgentError("La respuesta del modelo no genero casos de prueba.")
+def _require_dict(data: dict, key: str, section_name: str = None) -> dict:
+    value = data.get(key)
+    if not isinstance(value, dict):
+        readable_name = section_name or key
+        raise QAAgentError(f"La seccion '{readable_name}' debe tener formato de objeto.")
+    return value
 
-    for index, case in enumerate(data["casos_prueba"], start=1):
+
+def _require_list(data: dict, key: str, section_name: str = None, allow_empty: bool = True) -> list:
+    value = data.get(key)
+    if not isinstance(value, list):
+        readable_name = section_name or key
+        raise QAAgentError(f"La seccion '{readable_name}' debe tener formato de lista.")
+    if not allow_empty and not value:
+        readable_name = section_name or key
+        raise QAAgentError(f"La seccion '{readable_name}' no puede estar vacia.")
+    return value
+
+
+def _validate_list_items(
+    items: list,
+    section_name: str,
+    required_keys: list[str],
+    list_fields: list[str] = None,
+) -> None:
+    for index, item in enumerate(items, start=1):
+        if not isinstance(item, dict):
+            raise QAAgentError(f"El item #{index} de '{section_name}' no tiene formato valido.")
+        _validate_required_keys(f"{section_name} #{index}", item, required_keys)
+        for field in list_fields or []:
+            if not isinstance(item.get(field), list):
+                raise QAAgentError(
+                    f"El campo '{field}' del item #{index} de '{section_name}' debe ser una lista."
+                )
+
+
+def _validate_document_structure(data: dict) -> None:
+    """Valida que el JSON tenga la estructura esperada para el flujo STLC."""
+    _validate_required_keys("documento", data, REQUIRED_TOP_LEVEL_KEYS)
+
+    analysis = _require_dict(data, "analisis_requerimientos")
+    _validate_required_keys("analisis_requerimientos", analysis, REQUIRED_ANALYSIS_KEYS)
+    _require_list(analysis, "dudas_ambiguedades", "dudas_ambiguedades")
+    _require_list(analysis, "riesgos_requerimiento", "riesgos_requerimiento")
+    rtm_items = _require_list(analysis, "rtm", "rtm")
+    _validate_list_items(rtm_items, "rtm", REQUIRED_RTM_KEYS, list_fields=["casos_asignados"])
+
+    plan = _require_dict(data, "plan_pruebas")
+    _validate_required_keys("plan_pruebas", plan, REQUIRED_TEST_PLAN_KEYS)
+    for list_key in [
+        "alcance",
+        "fuera_de_alcance",
+        "tipos_prueba",
+        "criterios_entrada",
+        "criterios_salida",
+        "supuestos",
+        "riesgos",
+    ]:
+        _require_list(plan, list_key)
+    techniques = _require_list(plan, "tecnicas_diseno", "tecnicas_diseno")
+    _validate_list_items(techniques, "tecnicas_diseno", REQUIRED_TECHNIQUE_KEYS)
+
+    cases = _require_list(data, "casos_prueba", allow_empty=False)
+    for index, case in enumerate(cases, start=1):
         if not isinstance(case, dict):
             raise QAAgentError(f"El caso de prueba #{index} no tiene formato valido.")
-        missing_case_keys = [key for key in REQUIRED_CASE_KEYS if key not in case]
-        if missing_case_keys:
-            case_id = case.get("id", f"#{index}")
-            raise QAAgentError(
-                f"El caso {case_id} esta incompleto. Faltan campos: "
-                + ", ".join(missing_case_keys)
-            )
+        _validate_required_keys(f"caso de prueba #{index}", case, REQUIRED_CASE_KEYS)
         if not isinstance(case.get("pasos"), list):
             case_id = case.get("id", f"#{index}")
             raise QAAgentError(f"El caso {case_id} debe tener 'pasos' como lista.")
+
+    environment_items = _require_list(data, "checklist_entorno")
+    _validate_list_items(environment_items, "checklist_entorno", REQUIRED_ENVIRONMENT_KEYS)
+
+    execution = _require_dict(data, "reporte_ejecucion")
+    _validate_required_keys("reporte_ejecucion", execution, REQUIRED_EXECUTION_KEYS)
+    _require_list(execution, "bloqueos", "bloqueos")
+
+    defects = _require_list(data, "defect_log")
+    _validate_list_items(defects, "defect_log", REQUIRED_DEFECT_KEYS)
+
+    summary = _require_dict(data, "test_summary")
+    _validate_required_keys("test_summary", summary, REQUIRED_SUMMARY_KEYS)
 
 
 def _normalize_document(data: dict) -> dict:

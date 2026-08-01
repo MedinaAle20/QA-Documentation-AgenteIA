@@ -14,7 +14,7 @@ from markdown_exporter import export_to_markdown
 from qa_agent import export_to_excel
 
 
-REPORTS_DIR = Path.home() / "Documents" / "QA Documentation Agent" / "reportes"
+REPORTS_DIR = Path.home() / "Documents" / "QA Documentation IA Agent" / "reportes"
 
 
 def slugify_project_name(project_name: str) -> str:

@@ -27,7 +27,7 @@ except ImportError:
     sys.exit(1)
 
 
-APP_TITLE = "QA Documentation Agent"
+APP_TITLE = "QA Documentation IA Agent"
 STARTUP_TIMEOUT = 20.0
 
 
@@ -67,7 +67,7 @@ def main():
     )
 
     try:
-        print("Iniciando QA Documentation Agent...")
+        print("Iniciando QA Documentation IA Agent...")
         if not _wait_for_server(url, STARTUP_TIMEOUT):
             print(
                 f"Error: el servidor no respondió después de {STARTUP_TIMEOUT:.0f}s. "

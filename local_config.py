@@ -59,7 +59,7 @@ def save_local_env(values: dict, path: Path = ENV_PATH) -> None:
     current.update({key: value for key, value in values.items() if key in ENV_KEYS})
 
     lines = [
-        "# Configuracion local de QA Documentation Agent",
+        "# Configuracion local de QA Documentation IA Agent",
         "# No subir este archivo al repositorio.",
         f"LLM_PROVIDER={current.get('LLM_PROVIDER') or 'gemini'}",
         f"LLM_MODEL={current.get('LLM_MODEL') or ''}",

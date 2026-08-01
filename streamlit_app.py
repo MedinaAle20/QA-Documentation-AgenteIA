@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Interfaz simple de QA Documentation Agent.
+Interfaz simple de QA Documentation IA Agent.
 """
 
 import io
@@ -18,7 +18,7 @@ from report_storage import REPORTS_DIR, save_markdown_report, save_report, slugi
 load_local_env()
 
 st.set_page_config(
-    page_title="QA Documentation Agent",
+    page_title="QA Documentation IA Agent",
     page_icon="QA",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -279,7 +279,7 @@ def _render_results(data: dict) -> None:
 saved_env = read_local_env()
 saved_gemini_key = saved_env.get("GEMINI_API_KEY") or ""
 
-st.title("QA Documentation Agent")
+st.title("QA Documentation IA Agent")
 st.markdown(
     '<div class="app-note">Genera documentacion QA siguiendo STLC y fundamentos ISTQB: RTM, plan, tecnicas de diseno, casos, entorno, ejecucion, defectos y cierre.</div>',
     unsafe_allow_html=True,

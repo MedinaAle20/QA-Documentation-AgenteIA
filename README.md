@@ -1,6 +1,6 @@
-# QA Documentation Agent
+# QA Documentation IA Agent
 
-QA Documentation Agent es una aplicacion local que usa IA para convertir requerimientos, historias de usuario o criterios de aceptacion en documentacion QA manual siguiendo STLC y fundamentos ISTQB.
+QA Documentation IA Agent es una aplicacion local que usa IA para convertir requerimientos, historias de usuario o criterios de aceptacion en documentacion QA manual siguiendo STLC y fundamentos ISTQB.
 
 El objetivo del proyecto no es ejecutar pruebas ni automatizar flujos, sino ayudar a preparar documentacion de testing revisable por una persona QA Jr: analisis de requerimientos, RTM, plan de pruebas, casos manuales, checklist de entorno y plantillas para ejecucion, defectos y cierre.
 
@@ -80,7 +80,7 @@ Estas tecnicas se reflejan en:
 
 ## Excel Generado
 
-Cada reporte se exporta con 7 hojas:
+Cada reporte se exporta con 8 hojas:
 
 | Hoja | Contenido |
 | --- | --- |
@@ -123,7 +123,7 @@ Tambien se genera una version Markdown del documento para subir a GitHub o usar 
 Los reportes se guardan automaticamente en:
 
 ```text
-C:\Users\<tu-usuario>\Documents\QA Documentation Agent\reportes
+C:\Users\<tu-usuario>\Documents\QA Documentation IA Agent\reportes
 ```
 
 Ejemplo de nombre:
@@ -237,7 +237,7 @@ Genera `casos_mock.xlsx` para validar el formato del Excel sin consumir Gemini.
 
 - Compilacion Python con `compileall`.
 - Generacion mock sin API.
-- Verificacion de Excel con 7 hojas STLC.
+- Verificacion de Excel con 8 hojas STLC.
 - Generacion real con Gemini usando `gemini-3.5-flash-lite`.
 - Guardado local en carpeta de reportes.
 
